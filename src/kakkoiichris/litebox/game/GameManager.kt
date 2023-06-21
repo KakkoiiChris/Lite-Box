@@ -19,7 +19,7 @@ fun main() {
 class GameManager : AbstractGame {
     private val background = Image("/background.png")
     private val wood = Image("/wood.png").apply {
-        lightBlock = 0.95
+        lightBlock = 0.0
         hasAlpha = true
     }
     
@@ -41,7 +41,9 @@ class GameManager : AbstractGame {
     
     override fun render(display: Display, renderer: Renderer) {
         renderer.drawImage(background, 0, 0)
+        
         renderer.drawImage(wood, 50, 50)
+        
         for ((i, light) in lights.withIndex()) {
             val ox = (cos((i / lights.size.toDouble() + a) * PI * 2) * sin(m) * 50).toInt()
             val oy = (sin((i / lights.size.toDouble() + a) * PI * 2) * cos(m) * 50).toInt()

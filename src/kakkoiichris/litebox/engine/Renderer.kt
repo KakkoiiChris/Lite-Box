@@ -3,7 +3,6 @@ package kakkoiichris.litebox.engine
 import kakkoiichris.litebox.engine.gfx.*
 import java.awt.image.BufferedImage
 import java.awt.image.DataBufferInt
-import java.lang.Integer.max
 import kotlin.math.abs
 
 class Renderer(context: BufferedImage) {
@@ -60,44 +59,34 @@ class Renderer(context: BufferedImage) {
         }
         
         for (i in raster.indices) {
-            val lr = ((lightMap[i] shr 16) and 0xFF) / 255f
-            val lg = ((lightMap[i] shr 8) and 0xFF) / 255f
-            val lb = (lightMap[i] and 0xFF) / 255f
+            val base = Color(raster[i])
+            val light = Color(lightMap[i])
             
-            val pr = ((raster[i] shr 16) and 0xFF) / 255f
-            val pg = ((raster[i] shr 8) and 0xFF) / 255f
-            val pb = (raster[i] and 0xFF) / 255f
-            
-            val r = ((lr * pr) * 255).toInt()
-            val g = ((lg * pg) * 255).toInt()
-            val b = ((lb * pb) * 255).toInt()
-            
-            raster[i] = (r shl 16) or (g shl 8) or b
+            raster[i] = (base * light).value
         }
     }
     
     fun setPixel(x: Int, y: Int, value: Int, block: Double) {
-        val alpha = value shr 24 and 0xFF
-        
-        if (x !in 0 until width || y !in 0 until height || alpha == 0) return
-        
         val index = x + y * width
         
-        if (depthBuffer[index] > zDepth) return
+        val src = Color(value)
+        
+        if (
+            x !in 0 until width
+            || y !in 0 until height
+            || src.alpha == 0
+            || depthBuffer[index] > zDepth
+        ) return
         
         depthBuffer[index] = zDepth
         
-        if (alpha == 255) {
+        if (src.alpha == 255) {
             raster[index] = value
         }
         else {
-            val pixelColor = raster[index]
+            val dst = Color(raster[index])
             
-            val newRed = (pixelColor shr 16 and 0xFF) - (((pixelColor shr 16 and 0xFF) - (value shr 16 and 0xFF)) * (alpha / 255.0)).toInt()
-            val newGreen = (pixelColor shr 8 and 0xFF) - (((pixelColor shr 8 and 0xFF) - (value shr 8 and 0xFF)) * (alpha / 255.0)).toInt()
-            val newBlue = (pixelColor and 0xFF) - (((pixelColor and 0xFF) - (value and 0xFF)) * (alpha / 255.0)).toInt()
-            
-            raster[index] = (0xFF shl 24) or (newRed shl 16) or (newGreen shl 8) or newBlue
+            raster[index] = dst.blend(src).value
         }
         
         lightBlock[index] = block
@@ -108,13 +97,10 @@ class Renderer(context: BufferedImage) {
         
         val index = x + y * width
         
-        val baseColor = lightMap[index]
+        val baseColor = Color(lightMap[index])
+        val addedColor = Color(value)
         
-        val maxRed = max((value shr 16) and 0xFF, (baseColor shr 16) and 0xFF)
-        val maxGreen = max((value shr 8) and 0xFF, (baseColor shr 8) and 0xFF)
-        val maxBlue = max(value and 0xFF, baseColor and 0xFF)
-        
-        lightMap[index] = (maxRed shl 16) or (maxGreen shl 8) or maxBlue
+        lightMap[index] = baseColor.max(addedColor).value
     }
     
     fun drawLight(light: Light, x: Int, y: Int) {
