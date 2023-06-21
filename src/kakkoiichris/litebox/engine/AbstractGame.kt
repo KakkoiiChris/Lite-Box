@@ -1,6 +1,7 @@
 package kakkoiichris.litebox.engine
 
 abstract class AbstractGame {
-    abstract fun update(gc: GameContainer, dt: Float)
-    abstract fun render(gc: GameContainer, r: Renderer)
+    abstract fun update(container: GameContainer, delta: Float)
+    
+    abstract fun render(container: GameContainer, renderer: Renderer)
 }

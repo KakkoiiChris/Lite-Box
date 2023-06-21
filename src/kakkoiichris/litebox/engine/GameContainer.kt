@@ -7,8 +7,8 @@ class GameContainer(private val game: AbstractGame) : Runnable {
     val title = "MajEngine v1.0"
     
     val window = Window(this)
-    private val renderer = Renderer(this)
     val input = Input(this)
+    private val renderer = Renderer(this)
     
     private val thread = Thread(this)
     private var running = false

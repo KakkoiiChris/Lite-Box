@@ -6,41 +6,41 @@ import java.lang.Integer.max
 import kotlin.math.abs
 
 class Renderer(gc: GameContainer) {
-    var font = Font.COMIC
-    
     private val imageRequests = mutableListOf<ImageRequest>()
     private val lightRequests = mutableListOf<LightRequest>()
     
-    private val pW = gc.width
-    private val pH = gc.height
-    private val p = (gc.window.image.raster.dataBuffer as DataBufferInt).data
-    private val zb = IntArray(p.size)
-    private val lm = IntArray(p.size)
-    private val lb = IntArray(p.size)
+    private val width = gc.width
+    private val height = gc.height
+    private val raster = (gc.window.image.raster.dataBuffer as DataBufferInt).data
+    
+    private val depthBuffer = IntArray(raster.size)
+    private val lightMap = IntArray(raster.size)
+    private val lightBlock = IntArray(raster.size)
     
     private val ambient = 0xFF123456.toInt()
     
+    var font = Font.COMIC
     var zDepth = 0
     
     fun clear() {
-        p.fill(0)
-        zb.fill(0)
-        lm.fill(ambient)
+        raster.fill(0)
+        depthBuffer.fill(0)
+        lightMap.fill(ambient)
     }
     
     fun process() {
         if (imageRequests.isNotEmpty()) {
-            imageRequests.sortBy { it.zDepth }
+            imageRequests.sortBy { it.z }
             
             var i = 0
             
             while (i < imageRequests.size) {
                 val ir = imageRequests[i]
                 
-                zDepth = ir.zDepth
-                ir.image.alpha = false
-                drawImage(ir.image, ir.offX, ir.offY)
-                ir.image.alpha = true
+                zDepth = ir.z
+                ir.image.hasAlpha = false
+                drawImage(ir.image, ir.x, ir.y)
+                ir.image.hasAlpha = true
                 
                 i++
             }
@@ -58,62 +58,62 @@ class Renderer(gc: GameContainer) {
             lightRequests.clear()
         }
         
-        for (i in p.indices) {
-            val lr = ((lm[i] shr 16) and 0xFF) / 255f
-            val lg = ((lm[i] shr 8) and 0xFF) / 255f
-            val lb = (lm[i] and 0xFF) / 255f
+        for (i in raster.indices) {
+            val lr = ((lightMap[i] shr 16) and 0xFF) / 255f
+            val lg = ((lightMap[i] shr 8) and 0xFF) / 255f
+            val lb = (lightMap[i] and 0xFF) / 255f
             
-            val pr = ((p[i] shr 16) and 0xFF) / 255f
-            val pg = ((p[i] shr 8) and 0xFF) / 255f
-            val pb = (p[i] and 0xFF) / 255f
+            val pr = ((raster[i] shr 16) and 0xFF) / 255f
+            val pg = ((raster[i] shr 8) and 0xFF) / 255f
+            val pb = (raster[i] and 0xFF) / 255f
             
             val r = ((lr * pr) * 255).toInt()
             val g = ((lg * pg) * 255).toInt()
             val b = ((lb * pb) * 255).toInt()
             
-            p[i] = (r shl 16) or (g shl 8) or b
+            raster[i] = (r shl 16) or (g shl 8) or b
         }
     }
     
     fun setPixel(x: Int, y: Int, value: Int, block: Int) {
         val alpha = value shr 24 and 0xFF
         
-        if (x !in 0 until pW || y !in 0 until pH || alpha == 0) return
+        if (x !in 0 until width || y !in 0 until height || alpha == 0) return
         
-        val index = x + y * pW
+        val index = x + y * width
         
-        if (zb[index] > zDepth) return
+        if (depthBuffer[index] > zDepth) return
         
-        zb[index] = zDepth
+        depthBuffer[index] = zDepth
         
         if (alpha == 255) {
-            p[index] = value
+            raster[index] = value
         }
         else {
-            val pixelColor = p[index]
+            val pixelColor = raster[index]
             
             val newRed = (pixelColor shr 16 and 0xFF) - (((pixelColor shr 16 and 0xFF) - (value shr 16 and 0xFF)) * (alpha / 255.0)).toInt()
             val newGreen = (pixelColor shr 8 and 0xFF) - (((pixelColor shr 8 and 0xFF) - (value shr 8 and 0xFF)) * (alpha / 255.0)).toInt()
             val newBlue = (pixelColor and 0xFF) - (((pixelColor and 0xFF) - (value and 0xFF)) * (alpha / 255.0)).toInt()
             
-            p[index] = (0xFF shl 24) or (newRed shl 16) or (newGreen shl 8) or newBlue
+            raster[index] = (0xFF shl 24) or (newRed shl 16) or (newGreen shl 8) or newBlue
         }
         
-        lb[index] = block
+        lightBlock[index] = block
     }
     
     fun setLightMap(x: Int, y: Int, value: Int) {
-        if (x !in 0 until pW || y !in 0 until pH) return
+        if (x !in 0 until width || y !in 0 until height) return
         
-        val index = x + y * pW
+        val index = x + y * width
         
-        val baseColor = lm[index]
+        val baseColor = lightMap[index]
         
         val maxRed = max((value shr 16) and 0xFF, (baseColor shr 16) and 0xFF)
         val maxGreen = max((value shr 8) and 0xFF, (baseColor shr 8) and 0xFF)
         val maxBlue = max(value and 0xFF, baseColor and 0xFF)
         
-        lm[index] = (maxRed shl 16) or (maxGreen shl 8) or maxBlue
+        lightMap[index] = (maxRed shl 16) or (maxGreen shl 8) or maxBlue
     }
     
     fun drawLight(light: Light, x: Int, y: Int) {
@@ -147,13 +147,13 @@ class Renderer(gc: GameContainer) {
             val screenX = x - light.radius + offX
             val screenY = y - light.radius + offY
             
-            if (screenX !in 0 until pW || screenY !in 0 until pH) return
+            if (screenX !in 0 until width || screenY !in 0 until height) return
             
             val lightColor = light[x, y]
             
             if (lightColor == 0) return
             
-            if (lb[screenX + screenY * pW] == Light.FULL) return
+            if (lightBlock[screenX + screenY * width] == Light.FULL) return
             
             setLightMap(screenX, screenY, light[x, y])
             
@@ -173,7 +173,7 @@ class Renderer(gc: GameContainer) {
         }
     }
     
-    fun drawText(text: String, offX: Int, offY: Int, color: Int) {
+    fun drawText(text: String, x: Int, y: Int, color: Int) {
         val fontImage = font.fontImage
         
         var offset = 0
@@ -181,10 +181,10 @@ class Renderer(gc: GameContainer) {
         for (i in text.indices) {
             val unicode = text[i].code
             
-            for (y in 0 until fontImage.h) {
-                for (x in 0 until font.widths[unicode]) {
-                    if (fontImage.p[(x + font.offsets[unicode]) + y * fontImage.w] == 0xFFFFFFFF.toInt()) {
-                        setPixel(x + offX + offset, y + offY, color, Light.NONE)
+            for (gy in 0 until fontImage.height) {
+                for (gx in 0 until font.widths[unicode]) {
+                    if (fontImage.raster[(gx + font.offsets[unicode]) + gy * fontImage.width] == 0xFFFFFFFF.toInt()) {
+                        setPixel(gx + x + offset, gy + y, color, Light.NONE)
                     }
                 }
             }
@@ -193,95 +193,95 @@ class Renderer(gc: GameContainer) {
         }
     }
     
-    fun drawImage(image: Image, offX: Int, offY: Int) {
-        if (image.alpha) {
-            imageRequests.add(ImageRequest(image, zDepth, offX, offY))
+    fun drawImage(image: Image, x: Int, y: Int) {
+        if (image.hasAlpha) {
+            imageRequests += ImageRequest(image, x, y, zDepth)
             
             return
         }
         
-        if (offX < -image.w) return
-        if (offY < -image.h) return
-        if (offX >= pW) return
-        if (offY >= pH) return
+        if (x < -image.width) return
+        if (y < -image.height) return
+        if (x >= width) return
+        if (y >= height) return
         
         var newX = 0
         var newY = 0
-        var newW = image.w
-        var newH = image.h
+        var newW = image.width
+        var newH = image.height
         
-        if (offX < 0) newX -= offX
-        if (offY < 0) newY -= offY
-        if (offX + newW > pW) newW -= (newW + offX - pW)
-        if (offY + newH > pH) newH -= (newH + offY - pH)
+        if (x < 0) newX -= x
+        if (y < 0) newY -= y
+        if (x + newW > width) newW -= (newW + x - width)
+        if (y + newH > height) newH -= (newH + y - height)
         
-        for (y in newY until newH) {
-            for (x in newX until newW) {
-                setPixel(x + offX, y + offY, image.p[x + y * image.w], image.block)
+        for (py in newY until newH) {
+            for (px in newX until newW) {
+                setPixel(px + x, py + y, image.raster[px + py * image.width], image.lightBlock)
             }
         }
     }
     
-    fun drawImageTile(image: ImageTile, offX: Int, offY: Int, tileX: Int, tileY: Int) {
-        if (image.alpha) {
-            imageRequests.add(ImageRequest(image.getTileImage(tileX, tileY), zDepth, offX, offY))
+    fun drawImageTile(imageTile: ImageTile, x: Int, y: Int, tileX: Int, tileY: Int) {
+        if (imageTile.hasAlpha) {
+            imageRequests += ImageRequest(imageTile.getTileImage(tileX, tileY), x, y, zDepth)
             
             return
         }
         
-        if (offX < -image.tileW) return
-        if (offY < -image.tileH) return
-        if (offX >= pW) return
-        if (offY >= pH) return
+        if (x < -imageTile.tileWidth) return
+        if (y < -imageTile.tileHeight) return
+        if (x >= width) return
+        if (y >= height) return
         
         var newX = 0
         var newY = 0
-        var newW = image.tileW
-        var newH = image.tileH
+        var newW = imageTile.tileWidth
+        var newH = imageTile.tileHeight
         
-        if (offX < 0) newX -= offX
-        if (offY < 0) newY -= offY
-        if (offX + newW > pW) newW -= (newW + offX - pW)
-        if (offY + newH > pH) newH -= (newH + offY - pH)
+        if (x < 0) newX -= x
+        if (y < 0) newY -= y
+        if (x + newW > width) newW -= (newW + x - width)
+        if (y + newH > height) newH -= (newH + y - height)
         
-        for (y in newY until newH) {
-            for (x in newX until newW) {
-                setPixel(x + offX, y + offY, image.p[(x + tileX * image.tileW) + (y + tileY * image.tileH) * image.w], image.block)
+        for (py in newY until newH) {
+            for (px in newX until newW) {
+                setPixel(px + x, py + y, imageTile.raster[(px + tileX * imageTile.tileWidth) + (py + tileY * imageTile.tileHeight) * imageTile.width], imageTile.lightBlock)
             }
         }
     }
     
-    fun drawRect(offX: Int, offY: Int, width: Int, height: Int, color: Int) {
-        for (y in 0 until height) {
-            setPixel(offX, y + offY, color, Light.NONE)
-            setPixel(offX + width - 1, y + offY, color, Light.NONE)
+    fun drawRect(x: Int, y: Int, width: Int, height: Int, color: Int) {
+        for (py in 0 until height) {
+            setPixel(x, py + y, color, Light.NONE)
+            setPixel(x + width - 1, py + y, color, Light.NONE)
         }
         
-        for (x in 0 until width) {
-            setPixel(x + offX, offY, color, Light.NONE)
-            setPixel(x + offX, offY + height - 1, color, Light.NONE)
+        for (px in 0 until width) {
+            setPixel(px + x, y, color, Light.NONE)
+            setPixel(px + x, y + height - 1, color, Light.NONE)
         }
     }
     
-    fun fillRect(offX: Int, offY: Int, width: Int, height: Int, color: Int) {
-        if (offX < -width) return
-        if (offY < -height) return
-        if (offX >= pW) return
-        if (offY >= pH) return
+    fun fillRect(x: Int, y: Int, width: Int, height: Int, color: Int) {
+        if (x < -width) return
+        if (y < -height) return
+        if (x >= this.width) return
+        if (y >= this.height) return
         
         var newX = 0
         var newY = 0
         var newW = width
         var newH = height
         
-        if (offX < 0) newX -= offX
-        if (offY < 0) newY -= offY
-        if (offX + newW > pW) newW -= (newW + offX - pW)
-        if (offY + newH > pH) newH -= (newH + offY - pH)
+        if (x < 0) newX -= x
+        if (y < 0) newY -= y
+        if (x + newW > this.width) newW -= (newW + x - this.width)
+        if (y + newH > this.height) newH -= (newH + y - this.height)
         
-        for (y in newY until newH) {
-            for (x in newX until newW) {
-                setPixel(x + offX, y + offY, color, Light.NONE)
+        for (py in newY until newH) {
+            for (px in newX until newW) {
+                setPixel(px + x, py + y, color, Light.NONE)
             }
         }
     }

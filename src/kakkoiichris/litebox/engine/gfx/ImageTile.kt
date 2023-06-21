@@ -1,15 +1,15 @@
 package kakkoiichris.litebox.engine.gfx
 
-class ImageTile(path: String, val tileW: Int, val tileH: Int) : Image(path) {
+class ImageTile(path: String, val tileWidth: Int, val tileHeight: Int) : Image(path) {
     fun getTileImage(tileX: Int, tileY: Int): Image {
-        val p = IntArray(tileW * tileH)
+        val raster = IntArray(tileWidth * tileHeight)
         
-        for (y in 0 until tileH) {
-            for (x in 0 until tileW) {
-                p[x + y * tileW] = this.p[(x + tileX * tileW) + (y + tileY * tileH) * w]
+        for (y in 0 until tileHeight) {
+            for (x in 0 until tileWidth) {
+                raster[x + y * tileWidth] = this.raster[(x + tileX * tileWidth) + (y + tileY * tileHeight) * width]
             }
         }
         
-        return Image(p, tileW, tileH)
+        return Image(raster, tileWidth, tileHeight)
     }
 }

@@ -2,7 +2,7 @@ package kakkoiichris.litebox.engine.gfx
 
 import kotlin.math.sqrt
 
-class Light(val radius: Int, val color: Int) {
+class Light(val radius: Int, color: Int) {
     companion object {
         const val NONE = 0
         const val FULL = 1
@@ -10,7 +10,7 @@ class Light(val radius: Int, val color: Int) {
     
     val diameter = radius * 2
     
-    val lm = IntArray(diameter * diameter) { i ->
+    private val lightMap = IntArray(diameter * diameter) { i ->
         val x = (i % diameter) - radius
         val y = (i / diameter) - radius
         
@@ -20,15 +20,11 @@ class Light(val radius: Int, val color: Int) {
         
         val power = 1.0 - (distance / radius)
         
-        val cr = ((color shr 16) and 0xFF) / 255f
-        val cg = ((color shr 8) and 0xFF) / 255f
-        val cb = (color and 0xFF) / 255f
+        val red = (((color shr 16) and 0xFF) * power).toInt()
+        val green = (((color shr 8) and 0xFF) * power).toInt()
+        val blue = ((color and 0xFF) * power).toInt()
         
-        val r = ((cr * power) * 255).toInt()
-        val g = ((cg * power) * 255).toInt()
-        val b = ((cb * power) * 255).toInt()
-        
-        (r shl 16) or (g shl 8) or b
+        (red shl 16) or (green shl 8) or blue
     }
     
     operator fun get(x: Int, y: Int): Int {
@@ -36,6 +32,6 @@ class Light(val radius: Int, val color: Int) {
             return 0
         }
         
-        return lm[x + y * diameter]
+        return lightMap[x + y * diameter]
     }
 }

@@ -13,12 +13,12 @@ class Font(path: String) {
     init {
         var unicode = 0
         
-        for (i in 0 until fontImage.w) {
-            if (fontImage.p[i] == 0xFF0000FF.toInt()) {
+        for (i in 0 until fontImage.width) {
+            if (fontImage.raster[i] == 0xFF0000FF.toInt()) {
                 offsets[unicode] = i
             }
             
-            if (fontImage.p[i] == 0xFFFFFF00.toInt()) {
+            if (fontImage.raster[i] == 0xFFFFFF00.toInt()) {
                 widths[unicode] = i - offsets[unicode]
                 
                 unicode++

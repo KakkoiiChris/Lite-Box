@@ -25,15 +25,15 @@ class SoundClip(path: String) {
         }
     
     init {
-        val audioSource = javaClass.getResourceAsStream(path)
+        val source = javaClass.getResourceAsStream(path) ?: throw IllegalArgumentException("No sound file found at path '$path'!")
         
-        val bufferedIn = BufferedInputStream(audioSource)
+        val buffer = BufferedInputStream(source)
         
-        val ais = AudioSystem.getAudioInputStream(bufferedIn)
+        val stream = AudioSystem.getAudioInputStream(buffer)
         
-        val baseFormat = ais.format
+        val baseFormat = stream.format
         
-        val decodeFormat = AudioFormat(
+        val decodedFormat = AudioFormat(
             PCM_SIGNED,
             baseFormat.sampleRate,
             16,
@@ -43,32 +43,36 @@ class SoundClip(path: String) {
             false
         )
         
-        val dais = AudioSystem.getAudioInputStream(decodeFormat, ais)
+        val decodedStream = AudioSystem.getAudioInputStream(decodedFormat, stream)
         
         clip = AudioSystem.getClip()
-        clip.open(dais)
+        
+        clip.open(decodedStream)
+        
         gain = clip.getControl(MASTER_GAIN) as FloatControl
     }
     
-    fun play() {
+    fun play() = with(clip) {
         stop()
-        clip.framePosition = 0
-        clip.start()
+        
+        framePosition = 0
+        
+        start()
     }
     
-    fun loop() {
+    fun loop() = with(clip) {
         stop()
-        clip.framePosition = 0
-        clip.loop(Clip.LOOP_CONTINUOUSLY)
+        
+        framePosition = 0
+        
+        loop(Clip.LOOP_CONTINUOUSLY)
     }
     
-    fun stop() {
-        clip.stop()
-    }
+    fun stop() = clip.stop()
     
-    fun close() {
+    fun close() = with(clip) {
         stop()
-        clip.drain()
-        clip.close()
+        drain()
+        close()
     }
 }

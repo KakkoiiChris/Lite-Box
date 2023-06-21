@@ -8,23 +8,23 @@ import java.awt.image.BufferStrategy
 import java.awt.image.BufferedImage
 import javax.swing.JFrame
 
-class Window(gc: GameContainer) {
+class Window(container: GameContainer) {
     private val frame: JFrame
     val image: BufferedImage
     val canvas: Canvas
-    private val bs: BufferStrategy
-    private val g: Graphics
+    private val buffer: BufferStrategy
+    private val graphics: Graphics
     
     init {
-        image = BufferedImage(gc.width, gc.height, BufferedImage.TYPE_INT_RGB)
+        image = BufferedImage(container.width, container.height, BufferedImage.TYPE_INT_RGB)
         
         canvas = Canvas()
-        val s = Dimension((gc.width * gc.scale).toInt(), (gc.height * gc.scale).toInt())
-        canvas.preferredSize = s
-        canvas.maximumSize = s
-        canvas.minimumSize = s
+        val size = Dimension((container.width * container.scale).toInt(), (container.height * container.scale).toInt())
+        canvas.preferredSize = size
+        canvas.maximumSize = size
+        canvas.minimumSize = size
         
-        frame = JFrame(gc.title)
+        frame = JFrame(container.title)
         frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
         frame.layout = BorderLayout()
         frame.add(canvas, BorderLayout.CENTER)
@@ -34,12 +34,12 @@ class Window(gc: GameContainer) {
         frame.isVisible = true
         
         canvas.createBufferStrategy(2)
-        bs = canvas.bufferStrategy
-        g = bs.drawGraphics
+        buffer = canvas.bufferStrategy
+        graphics = buffer.drawGraphics
     }
     
     fun update() {
-        g.drawImage(image, 0, 0, canvas.width, canvas.height, null)
-        bs.show()
+        graphics.drawImage(image, 0, 0, canvas.width, canvas.height, null)
+        buffer.show()
     }
 }

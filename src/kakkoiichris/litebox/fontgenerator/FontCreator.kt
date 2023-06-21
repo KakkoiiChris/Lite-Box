@@ -24,7 +24,7 @@ fun main() {
 }
 
 object FontCreator : JFrame() {
-    private val fontComboBox: JComboBox<String>
+    private val nameComboBox: JComboBox<String>
     private val sizeComboBox: JComboBox<Int>
     
     /**
@@ -50,34 +50,34 @@ object FontCreator : JFrame() {
         
         setContentPane(contentPane)
         
-        val lblChooseFont = JLabel("Choose Font:")
+        val nameLabel = JLabel("Choose Font:")
         
-        lblChooseFont.setBounds(10, 11, 200, 14)
+        nameLabel.setBounds(10, 11, 200, 14)
         
-        contentPane.add(lblChooseFont)
+        contentPane.add(nameLabel)
         
-        fontComboBox = JComboBox<String>()
+        nameComboBox = JComboBox<String>()
         
-        fontComboBox.isEditable = true
-        fontComboBox.setBounds(10, 28, 200, 20)
+        nameComboBox.isEditable = true
+        nameComboBox.setBounds(10, 28, 200, 20)
         
-        contentPane.add(fontComboBox)
+        contentPane.add(nameComboBox)
         
         val e = GraphicsEnvironment.getLocalGraphicsEnvironment()
         
         val fonts = e.allFonts
         
         for (font in fonts) {
-            fontComboBox.addItem(font.name)
+            nameComboBox.addItem(font.name)
         }
         
-        fontComboBox.selectedItem = "Liberation Serif"
+        nameComboBox.selectedItem = "Liberation Serif"
         
-        val lblFontSize = JLabel("Choose Size:")
+        val sizeLabel = JLabel("Choose Size:")
         
-        lblFontSize.setBounds(220, 11, 60, 14)
+        sizeLabel.setBounds(220, 11, 60, 14)
         
-        contentPane.add(lblFontSize)
+        contentPane.add(sizeLabel)
         
         sizeComboBox = JComboBox(Vector(listOf(8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 36, 48, 72)))
         
@@ -87,13 +87,13 @@ object FontCreator : JFrame() {
         
         contentPane.add(sizeComboBox)
         
-        val btnGenerate = JButton("Create sprite!")
+        val generateButton = JButton("Create sprite!")
         
-        btnGenerate.font = Font(btnGenerate.font.name, btnGenerate.font.style, 12)
-        btnGenerate.setBounds(10, 59, 270, 35)
-        btnGenerate.addActionListener { generate() }
+        generateButton.font = Font(generateButton.font.name, generateButton.font.style, 12)
+        generateButton.setBounds(10, 59, 270, 35)
+        generateButton.addActionListener { generate() }
         
-        contentPane.add(btnGenerate)
+        contentPane.add(generateButton)
     }
     
     private fun fontExists(name: String): Boolean {
@@ -105,7 +105,7 @@ object FontCreator : JFrame() {
     }
     
     private fun generate() { // Check if font and size are valid
-        val fontName = fontComboBox.selectedItem as String
+        val fontName = nameComboBox.selectedItem as String
         
         if (!fontExists(fontName)) {
             return
@@ -147,8 +147,8 @@ object FontCreator : JFrame() {
         val height = bounds.height + 1
         
         // Calculate offset of font due to wrong height of chars like '(', ')' or 'Q'
-        val sizes = IntArray(256) { c ->
-            val gv = font.createGlyphVector(frc, c.toChar().toString())
+        val sizes = IntArray(256) { char ->
+            val gv = font.createGlyphVector(frc, char.toChar().toString())
             
             gv.getPixelBounds(null, 0f, 0f).height
         }

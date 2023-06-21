@@ -3,26 +3,26 @@ package kakkoiichris.litebox.engine.gfx
 import javax.imageio.ImageIO
 
 open class Image {
-    val w: Int
-    val h: Int
-    val p: IntArray
+    val width: Int
+    val height: Int
+    val raster: IntArray
     
-    var alpha = false
-    var block = Light.NONE
+    var hasAlpha = false
+    var lightBlock = Light.NONE
     
     constructor(path: String) {
         val image = ImageIO.read(javaClass.getResourceAsStream(path))
         
-        w = image.width
-        h = image.height
-        p = image.getRGB(0, 0, w, h, null, 0, w)
+        width = image.width
+        height = image.height
+        raster = image.getRGB(0, 0, width, height, null, 0, width)
         
         image.flush()
     }
     
-    constructor(p: IntArray, w: Int, h: Int) {
-        this.p = p
-        this.w = w
-        this.h = h
+    constructor(raster: IntArray, width: Int, height: Int) {
+        this.raster = raster
+        this.width = width
+        this.height = height
     }
 }
