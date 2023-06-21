@@ -20,7 +20,9 @@ class GameManager : AbstractGame {
     private val background = Image("/background.png")
     private val wood = Image("/wood.png").apply {
         lightBlock = 0.0
-        hasAlpha = true
+    }
+    private val hole = Image("/stoneHole.png").apply {
+        //hasAlpha = true
     }
     
     private val lightCount = 50
@@ -43,6 +45,8 @@ class GameManager : AbstractGame {
         renderer.drawImage(background, 0, 0)
         
         renderer.drawImage(wood, 50, 50)
+        
+        renderer.drawImage(hole, 150, 50)
         
         for ((i, light) in lights.withIndex()) {
             val ox = (cos((i / lights.size.toDouble() + a) * PI * 2) * sin(m) * 50).toInt()

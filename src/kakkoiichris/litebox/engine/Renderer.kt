@@ -17,42 +17,36 @@ class Renderer(context: BufferedImage) {
     private val lightMap = IntArray(raster.size)
     private val lightBlock = DoubleArray(raster.size)
     
-    var ambient = 0xFF000000.toInt()
-    
+    var ambientLight = 0xFF000000.toInt()
     var font = Font.COMIC
     var zDepth = 0
     
     fun clear() {
         raster.fill(0)
         depthBuffer.fill(0)
-        lightMap.fill(ambient)
+        lightMap.fill(ambientLight)
     }
     
     fun process() {
         if (imageRequests.isNotEmpty()) {
             imageRequests.sortBy { it.z }
             
-            var i = 0
-            
-            while (i < imageRequests.size) {
-                val ir = imageRequests[i]
+            for ((image, x, y, z) in imageRequests) {
+                zDepth = z
                 
-                zDepth = ir.z
-                ir.image.hasAlpha = false
-                drawImage(ir.image, ir.x, ir.y)
-                ir.image.hasAlpha = true
+                image.hasAlpha = false
                 
-                i++
+                drawImage(image, x, y)
+                
+                image.hasAlpha = true
             }
             
             imageRequests.clear()
         }
         
         if (lightRequests.isNotEmpty()) {
-            var i = 0
-            
-            while (i < lightRequests.size) {
-                drawLightRequest(lightRequests[i++])
+            for(lr in lightRequests) {
+                drawLightRequest(lr)
             }
             
             lightRequests.clear()
@@ -66,7 +60,7 @@ class Renderer(context: BufferedImage) {
         }
     }
     
-    fun setPixel(x: Int, y: Int, value: Int, block: Double) {
+    private fun setPixel(x: Int, y: Int, value: Int, block: Double) {
         val index = x + y * width
         
         val src = Color(value)
@@ -92,7 +86,7 @@ class Renderer(context: BufferedImage) {
         lightBlock[index] = block
     }
     
-    fun setLightMap(x: Int, y: Int, value: Int) {
+    private fun setLightMap(x: Int, y: Int, value: Int) {
         if (x !in 0 until width || y !in 0 until height) return
         
         val index = x + y * width
@@ -101,6 +95,100 @@ class Renderer(context: BufferedImage) {
         val addedColor = Color(value)
         
         lightMap[index] = baseColor.max(addedColor).value
+    }
+    
+    fun drawRect(x: Int, y: Int, width: Int, height: Int, color: Int) {
+        for (py in 0 until height) {
+            setPixel(x, py + y, color, 1.0)
+            setPixel(x + width - 1, py + y, color, 1.0)
+        }
+        
+        for (px in 0 until width) {
+            setPixel(px + x, y, color, 1.0)
+            setPixel(px + x, y + height - 1, color, 1.0)
+        }
+    }
+    
+    fun fillRect(x: Int, y: Int, width: Int, height: Int, color: Int) {
+        if (x < -width) return
+        if (y < -height) return
+        if (x >= this.width) return
+        if (y >= this.height) return
+        
+        var newX = 0
+        var newY = 0
+        var newW = width
+        var newH = height
+        
+        if (x < 0) newX -= x
+        if (y < 0) newY -= y
+        if (x + newW > this.width) newW -= (newW + x - this.width)
+        if (y + newH > this.height) newH -= (newH + y - this.height)
+        
+        for (py in newY until newH) {
+            for (px in newX until newW) {
+                setPixel(px + x, py + y, color, 1.0)
+            }
+        }
+    }
+    
+    fun drawText(text: String, x: Int, y: Int, color: Int) {
+        val fontImage = font.fontImage
+        
+        var offset = 0
+        
+        for (i in text.indices) {
+            val unicode = text[i].code
+            
+            for (gy in 0 until fontImage.height) {
+                for (gx in 0 until font.widths[unicode]) {
+                    if (fontImage.raster[(gx + font.offsets[unicode]) + gy * fontImage.width] == 0xFFFFFFFF.toInt()) {
+                        setPixel(gx + x + offset, gy + y, color, 1.0)
+                    }
+                }
+            }
+            
+            offset += font.widths[unicode]
+        }
+    }
+    
+    fun drawImage(image: Image, x: Int, y: Int) {
+        if (image.hasAlpha) {
+            imageRequests += ImageRequest(image, x, y, zDepth)
+            
+            return
+        }
+        
+        if (x < -image.width) return
+        if (y < -image.height) return
+        if (x >= width) return
+        if (y >= height) return
+        
+        var newX = 0
+        var newY = 0
+        var newW = image.width
+        var newH = image.height
+        
+        if (x < 0) newX -= x
+        if (y < 0) newY -= y
+        if (x + newW > width) newW -= (newW + x - width)
+        if (y + newH > height) newH -= (newH + y - height)
+        
+        for (py in newY until newH) {
+            for (px in newX until newW) {
+                setPixel(px + x, py + y, image.raster[px + py * image.width], image.lightBlock)
+            }
+        }
+    }
+    
+    fun drawImageTile(imageTile: ImageTile, x: Int, y: Int, tileX: Int, tileY: Int) {
+        if (imageTile.hasAlpha) {
+            imageRequests += ImageRequest(imageTile.getTileImage(tileX, tileY), x, y, zDepth)
+            
+            return
+        }
+        
+        drawImage(imageTile.getTileImage(tileX, tileY), x, y)
     }
     
     fun drawLight(light: Light, x: Int, y: Int) {
@@ -171,116 +259,7 @@ class Renderer(context: BufferedImage) {
         }
     }
     
-    fun drawText(text: String, x: Int, y: Int, color: Int) {
-        val fontImage = font.fontImage
-        
-        var offset = 0
-        
-        for (i in text.indices) {
-            val unicode = text[i].code
-            
-            for (gy in 0 until fontImage.height) {
-                for (gx in 0 until font.widths[unicode]) {
-                    if (fontImage.raster[(gx + font.offsets[unicode]) + gy * fontImage.width] == 0xFFFFFFFF.toInt()) {
-                        setPixel(gx + x + offset, gy + y, color, 1.0)
-                    }
-                }
-            }
-            
-            offset += font.widths[unicode]
-        }
-    }
+    private data class ImageRequest(val image: Image, val x: Int, val y: Int, val z: Int)
     
-    fun drawImage(image: Image, x: Int, y: Int) {
-        if (image.hasAlpha) {
-            imageRequests += ImageRequest(image, x, y, zDepth)
-            
-            return
-        }
-        
-        if (x < -image.width) return
-        if (y < -image.height) return
-        if (x >= width) return
-        if (y >= height) return
-        
-        var newX = 0
-        var newY = 0
-        var newW = image.width
-        var newH = image.height
-        
-        if (x < 0) newX -= x
-        if (y < 0) newY -= y
-        if (x + newW > width) newW -= (newW + x - width)
-        if (y + newH > height) newH -= (newH + y - height)
-        
-        for (py in newY until newH) {
-            for (px in newX until newW) {
-                setPixel(px + x, py + y, image.raster[px + py * image.width], image.lightBlock)
-            }
-        }
-    }
-    
-    fun drawImageTile(imageTile: ImageTile, x: Int, y: Int, tileX: Int, tileY: Int) {
-        if (imageTile.hasAlpha) {
-            imageRequests += ImageRequest(imageTile.getTileImage(tileX, tileY), x, y, zDepth)
-            
-            return
-        }
-        
-        if (x < -imageTile.tileWidth) return
-        if (y < -imageTile.tileHeight) return
-        if (x >= width) return
-        if (y >= height) return
-        
-        var newX = 0
-        var newY = 0
-        var newW = imageTile.tileWidth
-        var newH = imageTile.tileHeight
-        
-        if (x < 0) newX -= x
-        if (y < 0) newY -= y
-        if (x + newW > width) newW -= (newW + x - width)
-        if (y + newH > height) newH -= (newH + y - height)
-        
-        for (py in newY until newH) {
-            for (px in newX until newW) {
-                setPixel(px + x, py + y, imageTile.raster[(px + tileX * imageTile.tileWidth) + (py + tileY * imageTile.tileHeight) * imageTile.width], imageTile.lightBlock)
-            }
-        }
-    }
-    
-    fun drawRect(x: Int, y: Int, width: Int, height: Int, color: Int) {
-        for (py in 0 until height) {
-            setPixel(x, py + y, color, 1.0)
-            setPixel(x + width - 1, py + y, color, 1.0)
-        }
-        
-        for (px in 0 until width) {
-            setPixel(px + x, y, color, 1.0)
-            setPixel(px + x, y + height - 1, color, 1.0)
-        }
-    }
-    
-    fun fillRect(x: Int, y: Int, width: Int, height: Int, color: Int) {
-        if (x < -width) return
-        if (y < -height) return
-        if (x >= this.width) return
-        if (y >= this.height) return
-        
-        var newX = 0
-        var newY = 0
-        var newW = width
-        var newH = height
-        
-        if (x < 0) newX -= x
-        if (y < 0) newY -= y
-        if (x + newW > this.width) newW -= (newW + x - this.width)
-        if (y + newH > this.height) newH -= (newH + y - this.height)
-        
-        for (py in newY until newH) {
-            for (px in newX until newW) {
-                setPixel(px + x, py + y, color, 1.0)
-            }
-        }
-    }
+    private data class LightRequest(val light: Light, val x: Int, val y: Int)
 }
