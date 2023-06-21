@@ -16,11 +16,11 @@ fun main() {
 class GameManager : AbstractGame() {
     private val background = Image("/background.png")
     private val wood = Image("/wood.png").apply {
-        lightBlock = Light.FULL
+        lightBlock = 0.7
         hasAlpha = true
     }
     
-    private val light = Light(100, 0x00FFFF)
+    private val light = Light(100, 0xFFFFFF)
     
     private var x = 0
     private var y = 0

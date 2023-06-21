@@ -16,7 +16,7 @@ class Renderer(context: BufferedImage) {
     
     private val depthBuffer = IntArray(raster.size)
     private val lightMap = IntArray(raster.size)
-    private val lightBlock = IntArray(raster.size)
+    private val lightBlock = DoubleArray(raster.size)
     
     private val ambient = 0xFF123456.toInt()
     
@@ -76,7 +76,7 @@ class Renderer(context: BufferedImage) {
         }
     }
     
-    fun setPixel(x: Int, y: Int, value: Int, block: Int) {
+    fun setPixel(x: Int, y: Int, value: Int, block: Double) {
         val alpha = value shr 24 and 0xFF
         
         if (x !in 0 until width || y !in 0 until height || alpha == 0) return
@@ -144,6 +144,8 @@ class Renderer(context: BufferedImage) {
         
         var err = dx - dy
         
+        var strength = 1.0
+        
         while (true) {
             val screenX = x - light.radius + offX
             val screenY = y - light.radius + offY
@@ -154,9 +156,15 @@ class Renderer(context: BufferedImage) {
             
             if (lightColor == 0) return
             
-            if (lightBlock[screenX + screenY * width] == Light.FULL) return
+            val lightBlock = lightBlock[screenX + screenY * width]
             
-            setLightMap(screenX, screenY, light[x, y])
+            strength *= lightBlock
+            
+            if (strength == 0.0) return
+            
+            val color = Color(light[x, y]) * strength
+            
+            setLightMap(screenX, screenY, color.value)
             
             if (x == x1 && y == y1) break
             
@@ -185,7 +193,7 @@ class Renderer(context: BufferedImage) {
             for (gy in 0 until fontImage.height) {
                 for (gx in 0 until font.widths[unicode]) {
                     if (fontImage.raster[(gx + font.offsets[unicode]) + gy * fontImage.width] == 0xFFFFFFFF.toInt()) {
-                        setPixel(gx + x + offset, gy + y, color, Light.NONE)
+                        setPixel(gx + x + offset, gy + y, color, 1.0)
                     }
                 }
             }
@@ -254,13 +262,13 @@ class Renderer(context: BufferedImage) {
     
     fun drawRect(x: Int, y: Int, width: Int, height: Int, color: Int) {
         for (py in 0 until height) {
-            setPixel(x, py + y, color, Light.NONE)
-            setPixel(x + width - 1, py + y, color, Light.NONE)
+            setPixel(x, py + y, color, 1.0)
+            setPixel(x + width - 1, py + y, color, 1.0)
         }
         
         for (px in 0 until width) {
-            setPixel(px + x, y, color, Light.NONE)
-            setPixel(px + x, y + height - 1, color, Light.NONE)
+            setPixel(px + x, y, color, 1.0)
+            setPixel(px + x, y + height - 1, color, 1.0)
         }
     }
     
@@ -282,7 +290,7 @@ class Renderer(context: BufferedImage) {
         
         for (py in newY until newH) {
             for (px in newX until newW) {
-                setPixel(px + x, py + y, color, Light.NONE)
+                setPixel(px + x, py + y, color, 1.0)
             }
         }
     }

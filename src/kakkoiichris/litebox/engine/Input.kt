@@ -7,20 +7,13 @@ class Input(private val scale: Int) : KeyListener, MouseListener, MouseMotionLis
     private val keys = BooleanArray(numKeys)
     private val keysLast = BooleanArray(numKeys)
     
-    private val numButtons = 3
+    private val numButtons = 4
     private val buttons = BooleanArray(numButtons)
     private val buttonsLast = BooleanArray(numButtons)
     
     var mouseX = 0; private set
     var mouseY = 0; private set
     var scroll = 0; private set
-    
-    init {
-        //container.display.canvas.addKeyListener(this)
-        //container.display.canvas.addMouseListener(this)
-        //container.display.canvas.addMouseMotionListener(this)
-        //container.display.canvas.addMouseWheelListener(this)
-    }
     
     fun update() {
         scroll = 0

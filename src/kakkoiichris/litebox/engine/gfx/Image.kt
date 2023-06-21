@@ -8,7 +8,7 @@ open class Image {
     val raster: IntArray
     
     var hasAlpha = false
-    var lightBlock = Light.NONE
+    var lightBlock = 1.0
     
     constructor(path: String) {
         val image = ImageIO.read(javaClass.getResourceAsStream(path))
