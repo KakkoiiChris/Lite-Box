@@ -159,11 +159,11 @@ class Renderer(gc: GameContainer) {
             
             if (x == x1 && y == y1) break
             
-            val e2 = 2 * err;
+            val e2 = 2 * err
             
             if (e2 > -1 * dy) {
-                err -= dy;
-                x += sx;
+                err -= dy
+                x += sx
             }
             
             if (e2 < dx) {
@@ -179,7 +179,7 @@ class Renderer(gc: GameContainer) {
         var offset = 0
         
         for (i in text.indices) {
-            val unicode = text[i].toInt()
+            val unicode = text[i].code
             
             for (y in 0 until fontImage.h) {
                 for (x in 0 until font.widths[unicode]) {

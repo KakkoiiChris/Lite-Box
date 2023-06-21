@@ -49,21 +49,21 @@ class Input(private val gc: GameContainer) : KeyListener, MouseListener, MouseMo
     override fun keyTyped(e: KeyEvent) {}
     
     override fun keyPressed(e: KeyEvent) {
-        keys[e?.keyCode ?: return] = true
+        keys[e.keyCode] = true
     }
     
     override fun keyReleased(e: KeyEvent) {
-        keys[e?.keyCode ?: return] = false
+        keys[e.keyCode] = false
     }
     
     override fun mouseClicked(e: MouseEvent) {}
     
     override fun mousePressed(e: MouseEvent) {
-        buttons[e?.button ?: return] = true
+        buttons[e.button] = true
     }
     
     override fun mouseReleased(e: MouseEvent) {
-        buttons[e?.button ?: return] = false
+        buttons[e.button] = false
     }
     
     override fun mouseEntered(e: MouseEvent) {}
@@ -71,13 +71,13 @@ class Input(private val gc: GameContainer) : KeyListener, MouseListener, MouseMo
     override fun mouseExited(e: MouseEvent) {}
     
     override fun mouseMoved(e: MouseEvent) {
-        mouseX = ((e?.x ?: 0) / gc.scale).toInt()
-        mouseY = ((e?.y ?: 0) / gc.scale).toInt()
+        mouseX = (e.x / gc.scale).toInt()
+        mouseY = (e.y / gc.scale).toInt()
     }
     
     override fun mouseDragged(e: MouseEvent) = mouseMoved(e)
     
     override fun mouseWheelMoved(e: MouseWheelEvent) {
-        scroll = e?.wheelRotation ?: 0
+        scroll = e.wheelRotation
     }
 }

@@ -8,7 +8,7 @@ import kakkoiichris.litebox.engine.gfx.Light
 
 class GameManager : AbstractGame() {
     val b = Image("/background.png")
-    val w = Image("/wood.png").apply { block = Light.FULL;alpha=true }
+    val w = Image("/wood.png").apply { block = Light.FULL;alpha = true }
     val light = Light(50, 0x00FFFF)
     
     override fun update(gc: GameContainer, dt: Float) {
