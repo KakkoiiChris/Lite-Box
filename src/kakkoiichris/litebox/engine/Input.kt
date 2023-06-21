@@ -2,7 +2,7 @@ package kakkoiichris.litebox.engine
 
 import java.awt.event.*
 
-class Input(private val container: GameContainer) : KeyListener, MouseListener, MouseMotionListener, MouseWheelListener {
+class Input(private val scale: Int) : KeyListener, MouseListener, MouseMotionListener, MouseWheelListener {
     private val numKeys = 256
     private val keys = BooleanArray(numKeys)
     private val keysLast = BooleanArray(numKeys)
@@ -16,10 +16,10 @@ class Input(private val container: GameContainer) : KeyListener, MouseListener, 
     var scroll = 0; private set
     
     init {
-        container.window.canvas.addKeyListener(this)
-        container.window.canvas.addMouseListener(this)
-        container.window.canvas.addMouseMotionListener(this)
-        container.window.canvas.addMouseWheelListener(this)
+        //container.display.canvas.addKeyListener(this)
+        //container.display.canvas.addMouseListener(this)
+        //container.display.canvas.addMouseMotionListener(this)
+        //container.display.canvas.addMouseWheelListener(this)
     }
     
     fun update() {
@@ -71,8 +71,8 @@ class Input(private val container: GameContainer) : KeyListener, MouseListener, 
     override fun mouseExited(e: MouseEvent) {}
     
     override fun mouseMoved(e: MouseEvent) {
-        mouseX = (e.x / container.scale).toInt()
-        mouseY = (e.y / container.scale).toInt()
+        mouseX = e.x / scale
+        mouseY = e.y / scale
     }
     
     override fun mouseDragged(e: MouseEvent) = mouseMoved(e)

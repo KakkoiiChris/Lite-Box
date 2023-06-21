@@ -1,15 +1,15 @@
 package kakkoiichris.litebox.game
 
 import kakkoiichris.litebox.engine.AbstractGame
-import kakkoiichris.litebox.engine.GameContainer
+import kakkoiichris.litebox.engine.Display
 import kakkoiichris.litebox.engine.Renderer
 import kakkoiichris.litebox.engine.gfx.Image
 import kakkoiichris.litebox.engine.gfx.Light
 
 fun main() {
-    val gc = GameContainer(GameManager())
+    val display = Display(GameManager())
     
-    gc.start()
+    display.open()
 }
 
 class GameManager : AbstractGame() {
@@ -19,14 +19,19 @@ class GameManager : AbstractGame() {
         hasAlpha = true
     }
     
-    private val light = Light(50, 0x00FFFF)
+    private val light = Light(100, 0x00FFFF)
     
-    override fun update(container: GameContainer, delta: Float) {
+    private var x = 0.0
+    private var y = 0.0
+    
+    override fun update(display: Display, delta: Double) {
+        x += delta * 0.1
+        y += delta * 0.11
     }
     
-    override fun render(container: GameContainer, renderer: Renderer) {
+    override fun render(display: Display, renderer: Renderer) {
         renderer.drawImage(background, 0, 0)
         renderer.drawImage(wood, 50, 50)
-        renderer.drawLight(light, container.input.mouseX, container.input.mouseY)
+        renderer.drawLight(light, x.toInt(),y.toInt())
     }
 }

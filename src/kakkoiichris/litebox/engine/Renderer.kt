@@ -1,17 +1,18 @@
 package kakkoiichris.litebox.engine
 
 import kakkoiichris.litebox.engine.gfx.*
+import java.awt.image.BufferedImage
 import java.awt.image.DataBufferInt
 import java.lang.Integer.max
 import kotlin.math.abs
 
-class Renderer(gc: GameContainer) {
+class Renderer(context: BufferedImage) {
     private val imageRequests = mutableListOf<ImageRequest>()
     private val lightRequests = mutableListOf<LightRequest>()
     
-    private val width = gc.width
-    private val height = gc.height
-    private val raster = (gc.window.image.raster.dataBuffer as DataBufferInt).data
+    private val width = context.width
+    private val height = context.height
+    private val raster = (context.raster.dataBuffer as DataBufferInt).data
     
     private val depthBuffer = IntArray(raster.size)
     private val lightMap = IntArray(raster.size)
