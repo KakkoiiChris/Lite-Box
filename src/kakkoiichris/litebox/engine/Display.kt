@@ -114,7 +114,7 @@ class Display(val game: AbstractGame, val width: Int = 320, val height: Int = 24
     private fun update(delta: Double) {
         game.update(this, delta, input)
         
-        input.update()
+        input.poll()
     }
     
     private fun render() {

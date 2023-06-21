@@ -4,60 +4,80 @@ import java.awt.event.*
 
 class Input(private val scale: Int) : KeyListener, MouseListener, MouseMotionListener, MouseWheelListener {
     private val numKeys = 256
-    private val keys = BooleanArray(numKeys)
-    private val keysLast = BooleanArray(numKeys)
+    private val keys = Toggle.array(numKeys)
     
     private val numButtons = 4
-    private val buttons = BooleanArray(numButtons)
-    private val buttonsLast = BooleanArray(numButtons)
+    private val buttons = Toggle.array(numButtons)
+    
+    private val pollBuffer = mutableListOf<Toggle>()
     
     var mouseX = 0; private set
+    
     var mouseY = 0; private set
+    
     var scroll = 0; private set
     
-    fun update() {
+    fun poll() {
         scroll = 0
         
-        for (i in keys.indices) {
-            keysLast[i] = keys[i]
-        }
-        
-        for (i in buttons.indices) {
-            buttonsLast[i] = buttons[i]
-        }
+        pollBuffer.forEach(Toggle::poll)
     }
     
-    fun isKey(keycode: Int) = keys[keycode]
+    fun isKey(key: Int) = keys[key].held
     
-    fun isKeyUp(keycode: Int) = !keys[keycode] && keysLast[keycode]
+    fun isKeyUp(key: Int) = keys[key].up
     
-    fun isKeyDown(keycode: Int) = keys[keycode] && !keysLast[keycode]
+    fun isKeyDown(key: Int) = keys[key].down
     
-    fun isButton(button: Int) = buttons[button]
+    fun isButton(button: Int) = buttons[button].held
     
-    fun isButtonUp(button: Int) = !buttons[button] && buttonsLast[button]
+    fun isButtonUp(button: Int) = buttons[button].up
     
-    fun isButtonDown(button: Int) = buttons[button] && !buttonsLast[button]
-    
-    override fun keyTyped(e: KeyEvent) {}
+    fun isButtonDown(button: Int) = buttons[button].down
     
     override fun keyPressed(e: KeyEvent) {
-        keys[e.keyCode] = true
+        if (e.keyCode !in keys.indices) return
+        
+        val key = keys[e.keyCode]
+        
+        key.set(true)
+        
+        pollBuffer += key
     }
     
     override fun keyReleased(e: KeyEvent) {
-        keys[e.keyCode] = false
+        if (e.keyCode !in keys.indices) return
+        
+        val key = keys[e.keyCode]
+        
+        key.set(false)
+        
+        pollBuffer += key
     }
     
-    override fun mouseClicked(e: MouseEvent) {}
+    override fun keyTyped(e: KeyEvent) = e.consume()
     
     override fun mousePressed(e: MouseEvent) {
-        buttons[e.button] = true
+        if (e.button !in buttons.indices) return
+        
+        val button = buttons[e.button]
+        
+        button.set(true)
+        
+        pollBuffer += button
     }
     
     override fun mouseReleased(e: MouseEvent) {
-        buttons[e.button] = false
+        if (e.button !in buttons.indices) return
+        
+        val button = buttons[e.button]
+        
+        button.set(false)
+        
+        pollBuffer += button
     }
+    
+    override fun mouseClicked(e: MouseEvent) = e.consume()
     
     override fun mouseEntered(e: MouseEvent) {}
     
@@ -72,5 +92,28 @@ class Input(private val scale: Int) : KeyListener, MouseListener, MouseMotionLis
     
     override fun mouseWheelMoved(e: MouseWheelEvent) {
         scroll = e.wheelRotation
+    }
+    
+    internal class Toggle {
+        private var then = false
+        private var now = false
+        
+        val down get() = now && !then
+        
+        val held get() = now
+        
+        val up get() = !now && then
+        
+        fun set(down: Boolean) {
+            now = down
+        }
+        
+        fun poll() {
+            then = now
+        }
+        
+        companion object {
+            fun array(size: Int) = Array(size) { Toggle() }
+        }
     }
 }
