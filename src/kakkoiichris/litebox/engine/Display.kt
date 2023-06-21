@@ -14,6 +14,8 @@ class Display(val game: AbstractGame, val width: Int = 320, val height: Int = 24
     private val thread: Thread
     private var running = false
     
+    private val input = Input(scale)
+    
     private val context: BufferedImage
     private val renderer: Renderer
     
@@ -23,6 +25,11 @@ class Display(val game: AbstractGame, val width: Int = 320, val height: Int = 24
         canvas.preferredSize = size
         canvas.maximumSize = size
         canvas.minimumSize = size
+        
+        canvas.addKeyListener(input)
+        canvas.addMouseListener(input)
+        canvas.addMouseMotionListener(input)
+        canvas.addMouseWheelListener(input)
         
         frame.add(canvas)
         frame.pack()
@@ -105,7 +112,7 @@ class Display(val game: AbstractGame, val width: Int = 320, val height: Int = 24
     }
     
     private fun update(delta: Double) {
-        game.update(this, delta)
+        game.update(this, delta, input)
     }
     
     private fun render() {
