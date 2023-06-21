@@ -1,7 +1,7 @@
 package kakkoiichris.litebox.engine
 
-abstract class AbstractGame {
-    abstract fun update(display: Display, delta: Double, input: Input)
+interface AbstractGame {
+    fun update(display: Display, delta: Double, input: Input)
     
-    abstract fun render(display: Display, renderer: Renderer)
+    fun render(display: Display, renderer: Renderer)
 }

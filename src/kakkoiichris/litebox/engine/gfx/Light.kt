@@ -3,11 +3,6 @@ package kakkoiichris.litebox.engine.gfx
 import kotlin.math.sqrt
 
 class Light(val radius: Int, color: Int) {
-    companion object {
-        const val NONE = 0
-        const val FULL = 1
-    }
-    
     val diameter = radius * 2
     
     private val lightMap = IntArray(diameter * diameter) { i ->

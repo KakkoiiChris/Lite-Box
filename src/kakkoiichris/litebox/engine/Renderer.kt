@@ -18,7 +18,7 @@ class Renderer(context: BufferedImage) {
     private val lightMap = IntArray(raster.size)
     private val lightBlock = DoubleArray(raster.size)
     
-    private val ambient = 0xFF123456.toInt()
+    var ambient = 0xFF000000.toInt()
     
     var font = Font.COMIC
     var zDepth = 0
@@ -125,14 +125,17 @@ class Renderer(context: BufferedImage) {
         val (light, x, y) = lightRequest
         
         for (i in 0..light.diameter) {
-            drawLightLine(light, light.radius, light.radius, i, 0, x, y)
-            drawLightLine(light, light.radius, light.radius, i, light.diameter, x, y)
-            drawLightLine(light, light.radius, light.radius, 0, i, x, y)
-            drawLightLine(light, light.radius, light.radius, light.diameter, i, x, y)
+            drawLightLine(light, i, 0, x, y)
+            drawLightLine(light, i, light.diameter, x, y)
+            drawLightLine(light, 0, i, x, y)
+            drawLightLine(light, light.diameter, i, x, y)
         }
     }
     
-    private fun drawLightLine(light: Light, x0: Int, y0: Int, x1: Int, y1: Int, offX: Int, offY: Int) {
+    private fun drawLightLine(light: Light, x1: Int, y1: Int, offX: Int, offY: Int) {
+        val x0 = light.radius
+        val y0 = light.radius
+        
         var x = x0
         var y = y0
         
