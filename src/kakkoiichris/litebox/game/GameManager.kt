@@ -18,14 +18,11 @@ fun main() {
 
 class GameManager : AbstractGame {
     private val background = Image("/background.png")
-    private val wood = Image("/wood.png").apply {
-        lightBlock = 0.0
-    }
-    private val hole = Image("/stoneHole.png").apply {
-        //hasAlpha = true
+    private val block = Image("/block.png").apply {
+        lightBlock = 0.9
     }
     
-    private val lightCount = 50
+    private val lightCount = 12
     private val lights = Array(lightCount) { i -> Light(50, java.awt.Color.HSBtoRGB(i / lightCount.toFloat(), 1F, 1F)) }
     
     private var x = 0
@@ -37,20 +34,19 @@ class GameManager : AbstractGame {
         x = input.mouseX
         y = input.mouseY
         
-        a += delta * 0.01
+        a += delta * 0.001
         m += delta * 0.01
     }
     
     override fun render(display: Display, renderer: Renderer) {
+        renderer.ambientLight = 0x222222
         renderer.drawImage(background, 0, 0)
         
-        renderer.drawImage(wood, 50, 50)
-        
-        renderer.drawImage(hole, 150, 50)
+        renderer.drawImage(block, 0, 0)
         
         for ((i, light) in lights.withIndex()) {
-            val ox = (cos((i / lights.size.toDouble() + a) * PI * 2) * sin(m) * 50).toInt()
-            val oy = (sin((i / lights.size.toDouble() + a) * PI * 2) * cos(m) * 50).toInt()
+            val ox = (cos((i / lights.size.toDouble() + a) * PI * 2) *sin(m)* 50).toInt()
+            val oy = (sin((i / lights.size.toDouble() + a) * PI * 2) *sin(m)* 50).toInt()
             
             renderer.drawLight(light, x + ox, y + oy)
         }
