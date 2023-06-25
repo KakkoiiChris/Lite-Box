@@ -7,7 +7,13 @@ import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import java.awt.image.BufferedImage
 
-class Display(val game: AbstractGame, val width: Int = 320, val height: Int = 240, val scale: Int = 2, val title: String = "Lite Box Game Engine") : Runnable {
+class Display(
+    private val game: AbstractGame,
+    width: Int = 320,
+    height: Int = 240,
+    scale: Int = 2,
+    private val title: String = "Lite Box Game Engine"
+) : Runnable {
     private val frame = Frame(title)
     private val canvas = Canvas()
     
@@ -34,6 +40,7 @@ class Display(val game: AbstractGame, val width: Int = 320, val height: Int = 24
         frame.add(canvas)
         frame.pack()
         frame.isResizable = false
+        frame.isFocusable = false
         frame.setLocationRelativeTo(null)
         frame.addWindowListener(object : WindowAdapter() {
             override fun windowClosing(e: WindowEvent) {
@@ -47,6 +54,8 @@ class Display(val game: AbstractGame, val width: Int = 320, val height: Int = 24
         
         context = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
         renderer = Renderer(context)
+        
+        canvas.requestFocus()
     }
     
     fun open() {

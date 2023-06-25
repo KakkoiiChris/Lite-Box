@@ -6,19 +6,19 @@ class Font(path: String) {
         val COMIC = Font("/comic.png")
     }
     
-    val fontImage = Image(path)
+    val fontSprite = Sprite(path)
     val offsets = IntArray(256)
     val widths = IntArray(256)
     
     init {
         var unicode = 0
         
-        for (i in 0 until fontImage.width) {
-            if (fontImage.raster[i] == 0xFF0000FF.toInt()) {
+        for (i in 0 until fontSprite.width) {
+            if (fontSprite.raster[i] == 0xFF0000FF.toInt()) {
                 offsets[unicode] = i
             }
             
-            if (fontImage.raster[i] == 0xFFFFFF00.toInt()) {
+            if (fontSprite.raster[i] == 0xFFFFFF00.toInt()) {
                 widths[unicode] = i - offsets[unicode]
                 
                 unicode++

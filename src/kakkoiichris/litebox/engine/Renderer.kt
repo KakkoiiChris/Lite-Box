@@ -36,7 +36,7 @@ class Renderer(context: BufferedImage) {
                 
                 image.hasAlpha = false
                 
-                drawImage(image, x, y)
+                drawSprite(image, x, y)
                 
                 image.hasAlpha = true
             }
@@ -133,7 +133,7 @@ class Renderer(context: BufferedImage) {
     }
     
     fun drawText(text: String, x: Int, y: Int, color: Int) {
-        val fontImage = font.fontImage
+        val fontImage = font.fontSprite
         
         var offset = 0
         
@@ -152,22 +152,22 @@ class Renderer(context: BufferedImage) {
         }
     }
     
-    fun drawImage(image: Image, x: Int, y: Int) {
-        if (image.hasAlpha) {
-            imageRequests += ImageRequest(image, x, y, zDepth)
+    fun drawSprite(sprite: Sprite, x: Int, y: Int) {
+        if (sprite.hasAlpha) {
+            imageRequests += ImageRequest(sprite, x, y, zDepth)
             
             return
         }
         
-        if (x < -image.width) return
-        if (y < -image.height) return
+        if (x < -sprite.width) return
+        if (y < -sprite.height) return
         if (x >= width) return
         if (y >= height) return
         
         var newX = 0
         var newY = 0
-        var newW = image.width
-        var newH = image.height
+        var newW = sprite.width
+        var newH = sprite.height
         
         if (x < 0) newX -= x
         if (y < 0) newY -= y
@@ -176,19 +176,19 @@ class Renderer(context: BufferedImage) {
         
         for (py in newY until newH) {
             for (px in newX until newW) {
-                setPixel(px + x, py + y, image.raster[px + py * image.width], image.lightBlock)
+                setPixel(px + x, py + y, sprite.raster[px + py * sprite.width], sprite.lightBlock)
             }
         }
     }
     
-    fun drawImageTile(imageTile: ImageTile, x: Int, y: Int, tileX: Int, tileY: Int) {
-        if (imageTile.hasAlpha) {
-            imageRequests += ImageRequest(imageTile.getTileImage(tileX, tileY), x, y, zDepth)
+    fun drawSprite(spriteSheet: SpriteSheet, x: Int, y: Int, sheetX: Int, sheetY: Int) {
+        if (spriteSheet.hasAlpha) {
+            imageRequests += ImageRequest(spriteSheet.getTileImage(sheetX, sheetY), x, y, zDepth)
             
             return
         }
         
-        drawImage(imageTile.getTileImage(tileX, tileY), x, y)
+        drawSprite(spriteSheet.getTileImage(sheetX, sheetY), x, y)
     }
     
     fun drawLight(light: Light, x: Int, y: Int) {
@@ -243,7 +243,7 @@ class Renderer(context: BufferedImage) {
             
             setLightMap(screenX, screenY, color.value)
             
-            if (x == x1 && y == y1) break
+            if (x == x1 && y == y1) return
             
             val e2 = 2 * err
             
@@ -259,7 +259,7 @@ class Renderer(context: BufferedImage) {
         }
     }
     
-    private data class ImageRequest(val image: Image, val x: Int, val y: Int, val z: Int)
+    private data class ImageRequest(val sprite: Sprite, val x: Int, val y: Int, val z: Int)
     
     private data class LightRequest(val light: Light, val x: Int, val y: Int)
 }

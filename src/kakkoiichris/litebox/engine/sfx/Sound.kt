@@ -14,7 +14,7 @@ import javax.sound.sampled.FloatControl.Type.MASTER_GAIN
  * @author Christian Bryce Alexander
  * @since 7/20/2017, 9:54 PM
  */
-class SoundClip(path: String) {
+class Sound(path: String) {
     private val clip: Clip
     private val gain: FloatControl
     

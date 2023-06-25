@@ -1,7 +1,7 @@
 package kakkoiichris.litebox.engine.gfx
 
-class ImageTile(path: String, val tileWidth: Int, val tileHeight: Int) : Image(path) {
-    fun getTileImage(tileX: Int, tileY: Int): Image {
+class SpriteSheet(path: String, val tileWidth: Int, val tileHeight: Int) : Sprite(path) {
+    fun getTileImage(tileX: Int, tileY: Int): Sprite {
         val raster = IntArray(tileWidth * tileHeight)
         
         for (y in 0 until tileHeight) {
@@ -10,6 +10,6 @@ class ImageTile(path: String, val tileWidth: Int, val tileHeight: Int) : Image(p
             }
         }
         
-        return Image(raster, tileWidth, tileHeight)
+        return Sprite(raster, tileWidth, tileHeight)
     }
 }

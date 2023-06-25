@@ -2,7 +2,7 @@ package kakkoiichris.litebox.engine.gfx
 
 import javax.imageio.ImageIO
 
-open class Image {
+open class Sprite {
     val width: Int
     val height: Int
     val raster: IntArray
