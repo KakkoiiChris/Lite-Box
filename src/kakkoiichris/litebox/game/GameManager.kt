@@ -1,23 +1,25 @@
 package kakkoiichris.litebox.game
 
-import kakkoiichris.litebox.engine.AbstractGame
 import kakkoiichris.litebox.engine.Display
 import kakkoiichris.litebox.engine.Input
 import kakkoiichris.litebox.engine.Renderer
-import kakkoiichris.litebox.engine.gfx.Sprite
+import kakkoiichris.litebox.engine.State
 import kakkoiichris.litebox.engine.gfx.Light
+import kakkoiichris.litebox.engine.gfx.Sprite
 import java.awt.event.KeyEvent
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
 fun main() {
-    val display = Display(LightTest, scale = 3)
+    val display = Display(scale = 3)
+    
+    display.pushState(LightTest)
     
     display.open()
 }
 
-object LightTest : AbstractGame {
+object LightTest : State {
     private val background = Sprite("/background.png")
     private val block = Sprite("/block.png").apply {
         lightBlock = 0.9
@@ -29,6 +31,12 @@ object LightTest : AbstractGame {
     private var y = 0.0
     private var a = 0.0
     private var m = 0.0
+    
+    override fun enter(display: Display) {
+    }
+    
+    override fun leave(display: Display) {
+    }
     
     override fun update(display: Display, delta: Double, input: Input) {
         if (input.isKey(KeyEvent.VK_W)) {
@@ -49,6 +57,8 @@ object LightTest : AbstractGame {
         
         a += delta * 0.001
         m += delta * 0.01
+        
+        if (input.isKeyDown(KeyEvent.VK_SPACE)) display.pushState(GameManager)
     }
     
     override fun render(display: Display, renderer: Renderer) {
@@ -62,7 +72,7 @@ object LightTest : AbstractGame {
     }
 }
 
-object GameManager : AbstractGame {
+object GameManager : State {
     private val background = Sprite("/background.png")
     private val block = Sprite("/block.png").apply {
         lightBlock = 0.9
@@ -76,12 +86,20 @@ object GameManager : AbstractGame {
     private var a = 0.0
     private var m = 0.0
     
+    override fun enter(display: Display) {
+    }
+    
+    override fun leave(display: Display) {
+    }
+    
     override fun update(display: Display, delta: Double, input: Input) {
         x = input.mouseX
         y = input.mouseY
         
         a += delta * 0.001
         m += delta * 0.01
+        
+        if (input.isKeyDown(KeyEvent.VK_SPACE)) display.popState()
     }
     
     override fun render(display: Display, renderer: Renderer) {

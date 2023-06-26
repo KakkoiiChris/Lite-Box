@@ -8,11 +8,11 @@ import java.awt.event.WindowEvent
 import java.awt.image.BufferedImage
 
 class Display(
-    private val game: AbstractGame,
     width: Int = 320,
     height: Int = 240,
     scale: Int = 2,
-    private val title: String = "Lite Box Game Engine"
+    private val fps: Double = 60.0,
+    private val title: String = "Lite Box Game Engine",
 ) : Runnable {
     private val frame = Frame(title)
     private val canvas = Canvas()
@@ -24,6 +24,8 @@ class Display(
     
     private val context: BufferedImage
     private val renderer: Renderer
+    
+    private val manager = StateManager()
     
     init {
         val size = Dimension(width * scale, height * scale)
@@ -70,8 +72,17 @@ class Display(
         running = false
     }
     
+    fun gotoState(state: State) {
+        manager.goto(state)
+    }
+    
+    fun pushState(state: State) {
+        manager.push(state)
+    }
+    
+    fun popState() = manager.pop()
+    
     override fun run() {
-        val fps = 60.0
         val npu = 1E9 / fps
         
         var then = System.nanoTime()
@@ -83,6 +94,8 @@ class Display(
         var frames = 0
         
         while (running) {
+            manager.swap(this)
+            
             val now = System.nanoTime()
             val elapsed = (now - then) / npu
             
@@ -121,7 +134,7 @@ class Display(
     }
     
     private fun update(delta: Double) {
-        game.update(this, delta, input)
+        manager.update(this, delta, input)
         
         input.poll()
     }
@@ -129,7 +142,7 @@ class Display(
     private fun render() {
         renderer.clear()
         
-        game.render(this, renderer)
+        manager.render(this, renderer)
         
         renderer.process()
         
